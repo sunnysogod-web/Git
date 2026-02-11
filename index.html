@@ -1,516 +1,573 @@
 <!DOCTYPE html>
-<html lang="th" class="h-full">
+<html lang="th">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ระบบลากลับบ้าน</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-analytics.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;600;700&display=swap" rel="stylesheet">
-  <style>
-    html, body {
-      height: 100%;
-      margin: 0;
-      padding: 0;
-      font-family: 'Prompt', sans-serif;
-      box-sizing: border-box;
-    }
-    body {
-      box-sizing: border-box;
-    }
-    * {
-      box-sizing: border-box;
-    }
-    @keyframes float {
-      0%, 100% { transform: translateY(0px); }
-      50% { transform: translateY(-8px); }
-    }
-    @keyframes slideUp {
-      from { 
-        opacity: 0; 
-        transform: translateY(20px); 
-      }
-      to { 
-        opacity: 1; 
-        transform: translateY(0px); 
-      }
-    }
-    .float-anim {
-      animation: float 3s ease-in-out infinite;
-    }
-    .glass {
-      background: rgba(255, 255, 255, 0.95);
-      backdrop-filter: blur(10px);
-    }
-    .hidden-page {
-      display: none !important;
-    }
-    .notification {
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      padding: 16px 24px;
-      background: white;
-      border-radius: 12px;
-      box-shadow: 0 10px 40px rgba(0,0,0,0.1);
-      z-index: 9999;
-      animation: slideUp 0.3s ease-out;
-      max-width: 400px;
-      font-weight: 600;
-    }
-    .notification.success {
-      border-left: 4px solid #10b981;
-      color: #059669;
-    }
-    .notification.error {
-      border-left: 4px solid #ef4444;
-      color: #dc2626;
-    }
-    input, textarea, select {
-      font-family: 'Prompt', sans-serif !important;
-    }
-    button {
-      font-family: 'Prompt', sans-serif !important;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบขอลากลับบ้าน - โรงเรียน</title>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            font-family: 'Prompt', sans-serif;
+            box-sizing: border-box;
+        }
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        
+        .float-anim { animation: float 3s ease-in-out infinite; }
+        .pulse-anim { animation: pulse 2s ease-in-out infinite; }
+        
+        .glass {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .card-shadow {
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+        
+        input, textarea, select {
+            font-family: 'Prompt', sans-serif !important;
+        }
+        
+        button {
+            font-family: 'Prompt', sans-serif !important;
+            transition: all 0.3s ease;
+        }
+        
+        button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        button:active:not(:disabled) {
+            transform: translateY(0);
+        }
+        
+        .hidden-page {
+            display: none !important;
+        }
+        
+        .notification-badge {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #10b981;
+            color: white;
+            padding: 16px 24px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            z-index: 9999;
+            animation: slideIn 0.5s ease;
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+        
+        .status-pending {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        
+        .status-approved {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        
+        .status-rejected {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+    </style>
 </head>
-<body class="h-full w-full bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 overflow-auto">
-  <div id="app" class="min-h-full w-full">
-
-    <!-- ============= LOGIN PAGE ============= -->
-    <div id="loginPage" class="w-full min-h-full flex items-center justify-center p-4">
-      <div class="w-full max-w-md">
-        <div class="glass rounded-2xl p-8 shadow-2xl">
-          <div class="text-center mb-8">
-            <div class="text-7xl mb-4 float-anim">👨‍🎓</div>
-            <h1 class="text-3xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent mb-2">ระบบลากลับบ้าน</h1>
-            <p class="text-gray-600 text-lg">ระบบจัดการการลาออกจากโรงเรียน</p>
-          </div>
-
-          <div class="space-y-4">
-            <div>
-              <label for="studentId" class="block text-sm font-semibold text-gray-700 mb-2">🎫 เลขประจำตัวนักเรียน</label>
-              <input type="text" id="studentId" placeholder="เช่น 6503001" class="w-full px-4 py-3 border-2 border-purple-300 rounded-xl focus:outline-none focus:border-purple-600 focus:ring-2 focus:ring-purple-200 transition-all" />
-            </div>
-
-            <div>
-              <label for="nationalId" class="block text-sm font-semibold text-gray-700 mb-2">🪪 เลขประชาชน (4 ตัวท้าย)</label>
-              <input type="text" id="nationalId" placeholder="กรอก 4 ตัวท้าย" maxlength="4" class="w-full px-4 py-3 border-2 border-purple-300 rounded-xl focus:outline-none focus:border-purple-600 focus:ring-2 focus:ring-purple-200 transition-all" />
-            </div>
-
-            <button type="button" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 14px; border-radius: 12px; font-weight: 700; font-size: 16px; cursor: pointer; width: 100%; transition: all 0.3s ease;" onmousedown="this.style.transform='scale(0.98)'" onmouseup="this.style.transform='scale(1)'" onclick="studentLogin()">
-              🚀 เข้าสู่ระบบ
-            </button>
-
-            <div class="relative my-6">
-              <div class="absolute inset-0 flex items-center"><div class="w-full border-t-2 border-gray-300"></div></div>
-              <div class="relative flex justify-center"><span class="px-3 bg-white text-gray-500 font-medium">หรือ</span></div>
-            </div>
-
-            <button type="button" style="background: white; color: #10b981; border: 2px solid #10b981; padding: 14px; border-radius: 12px; font-weight: 700; font-size: 16px; cursor: pointer; width: 100%; transition: all 0.3s ease;" onmousedown="this.style.transform='scale(0.98)'" onmouseup="this.style.transform='scale(1)'" onclick="showTeacherLoginPage()">
-              👨‍🏫 ครู/แอดมิน
-            </button>
-          </div>
-
-          <div id="loginError" class="mt-4 p-3 bg-red-50 border-l-4 border-red-500 text-red-700 rounded-lg hidden">
-            <p class="font-semibold" id="loginErrorText">กรุณากรอกข้อมูล</p>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- ============= TEACHER LOGIN PAGE ============= -->
-    <div id="teacherLoginPage" class="w-full min-h-full flex items-center justify-center p-4 hidden-page">
-      <div class="w-full max-w-md">
-        <div class="glass rounded-2xl p-8 shadow-2xl">
-          <div class="text-center mb-8">
-            <div class="text-7xl mb-4 float-anim">👨‍🏫</div>
-            <h1 class="text-3xl font-bold bg-gradient-to-r from-green-600 to-teal-600 bg-clip-text text-transparent mb-2">ระบบหลังบ้าน</h1>
-            <p class="text-gray-600 text-lg">สำหรับครู และผู้ดูแลระบบ</p>
-          </div>
-
-          <div class="space-y-4">
-            <div>
-              <label for="teacherUsername" class="block text-sm font-semibold text-gray-700 mb-2">👤 ชื่อผู้ใช้</label>
-              <input type="text" id="teacherUsername" placeholder="admin" class="w-full px-4 py-3 border-2 border-green-300 rounded-xl focus:outline-none focus:border-green-600 focus:ring-2 focus:ring-green-200 transition-all" />
-            </div>
-
-            <div>
-              <label for="teacherPassword" class="block text-sm font-semibold text-gray-700 mb-2">🔑 รหัสผ่าน</label>
-              <input type="password" id="teacherPassword" placeholder="1234" class="w-full px-4 py-3 border-2 border-green-300 rounded-xl focus:outline-none focus:border-green-600 focus:ring-2 focus:ring-green-200 transition-all" />
-            </div>
-
-            <button type="button" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; padding: 14px; border-radius: 12px; font-weight: 700; font-size: 16px; cursor: pointer; width: 100%; transition: all 0.3s ease;" onmousedown="this.style.transform='scale(0.98)'" onmouseup="this.style.transform='scale(1)'" onclick="teacherLogin()">
-              🔓 เข้าสู่ระบบ
-            </button>
-
-            <button type="button" style="background: white; color: #6b7280; border: 2px solid #d1d5db; padding: 14px; border-radius: 12px; font-weight: 700; font-size: 16px; cursor: pointer; width: 100%; transition: all 0.3s ease;" onmousedown="this.style.transform='scale(0.98)'" onmouseup="this.style.transform='scale(1)'" onclick="backToStudentLogin()">
-              ← กลับ
-            </button>
-
-            <div class="p-3 bg-blue-50 border-l-4 border-blue-500 text-blue-700 rounded-lg text-sm">
-              <p class="font-semibold">💡 ทดสอบ: admin / 1234</p>
-            </div>
-          </div>
-
-          <div id="teacherLoginError" class="mt-4 p-3 bg-red-50 border-l-4 border-red-500 text-red-700 rounded-lg hidden">
-            <p class="font-semibold" id="teacherLoginErrorText">ข้อมูลไม่ถูกต้อง</p>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- ============= STUDENT DASHBOARD ============= -->
-    <div id="studentDashboard" class="w-full min-h-full p-4 hidden-page">
-      <div class="max-w-4xl mx-auto">
-        <!-- Header -->
-        <div class="glass rounded-2xl p-6 mb-6 shadow-lg">
-          <div class="flex items-center justify-between gap-4 flex-wrap">
-            <div class="flex items-center gap-4">
-              <div class="text-5xl">👨‍🎓</div>
-              <div>
-                <p class="text-2xl font-bold text-gray-800">ยินดีต้อนรับ</p>
-                <p class="text-gray-600">เลขประจำตัว: <span id="stdIdDisplay" class="font-bold">-</span></p>
-              </div>
-            </div>
-            <button type="button" style="background: #ef4444; color: white; border: none; padding: 12px 20px; border-radius: 10px; font-weight: 700; cursor: pointer; transition: all 0.3s ease;" onmousedown="this.style.transform='scale(0.98)'" onmouseup="this.style.transform='scale(1)'" onclick="logoutUser()">
-              🚪 ออก
-            </button>
-          </div>
-        </div>
-
-        <!-- Form Container -->
-        <div class="glass rounded-2xl p-6 shadow-lg">
-          <h2 class="text-2xl font-bold text-gray-800 mb-6">📝 ขอลากลับบ้าน</h2>
-
-          <form id="leaveForm" onsubmit="submitRequest(event)">
-            <div class="space-y-5">
-              <!-- Row 1: Name and Class -->
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label for="formName" class="block text-sm font-semibold text-gray-700 mb-2">👤 ชื่อ-สกุล</label>
-                  <input type="text" id="formName" placeholder="ชื่อ นามสกุล" class="w-full px-4 py-3 border-2 border-purple-300 rounded-xl focus:outline-none focus:border-purple-600 transition-all" required />
-                </div>
-                <div>
-                  <label for="formClass" class="block text-sm font-semibold text-gray-700 mb-2">🏫 ห้องเรียน</label>
-                  <input type="text" id="formClass" placeholder="เช่น ม.3/1" class="w-full px-4 py-3 border-2 border-purple-300 rounded-xl focus:outline-none focus:border-purple-600 transition-all" required />
-                </div>
-              </div>
-
-              <!-- Row 2: Date and Time -->
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label for="formDate" class="block text-sm font-semibold text-gray-700 mb-2">📅 วันที่ลา</label>
-                  <input type="date" id="formDate" class="w-full px-4 py-3 border-2 border-purple-300 rounded-xl focus:outline-none focus:border-purple-600 transition-all" required />
-                </div>
-                <div>
-                  <label for="formTime" class="block text-sm font-semibold text-gray-700 mb-2">🕐 เวลาออก</label>
-                  <input type="time" id="formTime" class="w-full px-4 py-3 border-2 border-purple-300 rounded-xl focus:outline-none focus:border-purple-600 transition-all" required />
-                </div>
-              </div>
-
-              <!-- Reason -->
-              <div>
-                <label for="formReason" class="block text-sm font-semibold text-gray-700 mb-2">📋 เหตุผลการลา</label>
-                <select id="formReason" class="w-full px-4 py-3 border-2 border-purple-300 rounded-xl focus:outline-none focus:border-purple-600 transition-all" required>
-                  <option value="">-- เลือกเหตุผล --</option>
-                  <option value="ป่วย">🏥 ป่วย</option>
-                  <option value="ธุระครอบครัว">👨‍👩‍👧 ธุระครอบครัว</option>
-                  <option value="นัดหมายแพทย์">⚕️ นัดหมายแพทย์</option>
-                  <option value="อื่นๆ">📝 อื่นๆ</option>
-                </select>
-              </div>
-
-              <!-- Parent Info -->
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label for="formParent" class="block text-sm font-semibold text-gray-700 mb-2">👤 ชื่อผู้ปกครอง</label>
-                  <input type="text" id="formParent" placeholder="ชื่อผู้ปกครอง" class="w-full px-4 py-3 border-2 border-purple-300 rounded-xl focus:outline-none focus:border-purple-600 transition-all" required />
-                </div>
-                <div>
-                  <label for="formPhone" class="block text-sm font-semibold text-gray-700 mb-2">📱 เบอร์โทรผู้ปกครอง</label>
-                  <input type="tel" id="formPhone" placeholder="0XX-XXX-XXXX" class="w-full px-4 py-3 border-2 border-purple-300 rounded-xl focus:outline-none focus:border-purple-600 transition-all" required />
-                </div>
-              </div>
-
-              <!-- Submit Button -->
-              <button type="submit" id="submitBtn" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 16px; border-radius: 12px; font-weight: 700; font-size: 16px; cursor: pointer; width: 100%; transition: all 0.3s ease;" onmousedown="this.style.transform='scale(0.98)'" onmouseup="this.style.transform='scale(1)'">
-                ✨ ส่งคำขอ
-              </button>
-
-              <!-- Message Box -->
-              <div id="messageBox" style="padding: 12px 16px; border-radius: 10px; display: none; font-weight: 600; border-left: 4px solid;"></div>
-            </div>
-          </form>
-        </div>
-      </div>
-    </div>
-
-    <!-- ============= TEACHER DASHBOARD ============= -->
-    <div id="teacherDashboard" class="w-full min-h-full p-4 hidden-page">
-      <div class="max-w-6xl mx-auto">
-        <!-- Header -->
-        <div class="glass rounded-2xl p-6 mb-6 shadow-lg">
-          <div class="flex items-center justify-between gap-4 flex-wrap">
-            <div class="flex items-center gap-4">
-              <div class="text-5xl">👨‍🏫</div>
-              <div>
-                <p class="text-2xl font-bold text-gray-800">ระบบหลังบ้าน</p>
-                <p class="text-gray-600">ผู้ดูแลระบบ</p>
-              </div>
-            </div>
-            <button type="button" style="background: #ef4444; color: white; border: none; padding: 12px 20px; border-radius: 10px; font-weight: 700; cursor: pointer; transition: all 0.3s ease;" onmousedown="this.style.transform='scale(0.98)'" onmouseup="this.style.transform='scale(1)'" onclick="logoutUser()">
-              🚪 ออก
-            </button>
-          </div>
-        </div>
-
-        <!-- Stats -->
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-          <div class="glass rounded-2xl p-4 shadow-lg">
-            <p class="text-3xl font-bold text-yellow-600" id="statPending">0</p>
-            <p class="text-gray-700 font-semibold text-sm">⏳ รอดำเนินการ</p>
-          </div>
-          <div class="glass rounded-2xl p-4 shadow-lg">
-            <p class="text-3xl font-bold text-green-600" id="statApproved">0</p>
-            <p class="text-gray-700 font-semibold text-sm">✅ อนุมัติแล้ว</p>
-          </div>
-          <div class="glass rounded-2xl p-4 shadow-lg">
-            <p class="text-3xl font-bold text-red-600" id="statRejected">0</p>
-            <p class="text-gray-700 font-semibold text-sm">❌ ไม่อนุมัติ</p>
-          </div>
-          <div class="glass rounded-2xl p-4 shadow-lg">
-            <p class="text-3xl font-bold text-blue-600" id="statTotal">0</p>
-            <p class="text-gray-700 font-semibold text-sm">📊 ทั้งหมด</p>
-          </div>
-        </div>
-
-        <!-- Pending Requests -->
-        <div class="glass rounded-2xl p-6 shadow-lg mb-6">
-          <h2 class="text-2xl font-bold text-gray-800 mb-4">⏳ คำขอรอดำเนินการ</h2>
-          <div id="pendingList" class="space-y-3">
-            <p style="text-align: center; color: #999; padding: 20px;">กำลังโหลด...</p>
-          </div>
-        </div>
-
-        <!-- Approved Requests -->
-        <div class="glass rounded-2xl p-6 shadow-lg">
-          <h2 class="text-2xl font-bold text-gray-800 mb-4">✅ คำขออนุมัติแล้ว</h2>
-          <div id="approvedList" class="space-y-3">
-            <p style="text-align: center; color: #999; padding: 20px;">ไม่มีรายการ</p>
-          </div>
-        </div>
-      </div>
-    </div>
-
-  </div>
-
-  <script>
-    // Firebase Configuration
-    const firebaseConfig = {
-      apiKey: "AIzaSyCm9QsD6NwRF0zusMzgESEyA43hjEyHRhw",
-      authDomain: "sw-website-68.firebaseapp.com",
-      databaseURL: "https://sw-website-68-default-rtdb.firebaseio.com",
-      projectId: "sw-website-68",
-      storageBucket: "sw-website-68.firebasestorage.app",
-      messagingSenderId: "123456789012",
-      appId: "1:123456789012:web:28d2f983c552a118e9397c",
-      measurementId: "G-ESPPG76N3H"
-    };
-
-    // Initialize Firebase
-    firebase.initializeApp(firebaseConfig);
-    if (typeof firebase.analytics !== 'undefined') {
-      firebase.analytics();
-    }
-
-    const db = firebase.database();
-
-    let currentUser = null;
-    let allData = [];
-    let dataListener = null;
-
-    // =============== LOGIN FUNCTIONS ===============
-    function studentLogin() {
-      const stdId = document.getElementById('studentId').value.trim();
-      const natId = document.getElementById('nationalId').value.trim();
-      const errorEl = document.getElementById('loginError');
-      const errorText = document.getElementById('loginErrorText');
-
-      if (!stdId || !natId || natId.length !== 4) {
-        errorText.textContent = '❌ กรุณากรอกข้อมูลให้ครบถ้วน';
-        errorEl.style.display = 'block';
-        return;
-      }
-
-      currentUser = { type: 'student', studentId: stdId, nationalId: natId };
-      errorEl.style.display = 'none';
-      
-      document.getElementById('loginPage').style.display = 'none';
-      document.getElementById('studentDashboard').style.display = 'block';
-      document.getElementById('stdIdDisplay').textContent = stdId;
-
-      const today = new Date().toISOString().split('T')[0];
-      document.getElementById('formDate').value = today;
-      
-      showNotification('✅ เข้าสู่ระบบสำเร็จ!', 'success');
-    }
-
-    function showTeacherLoginPage() {
-      document.getElementById('loginPage').style.display = 'none';
-      document.getElementById('teacherLoginPage').style.display = 'flex';
-    }
-
-    function backToStudentLogin() {
-      document.getElementById('teacherLoginPage').style.display = 'none';
-      document.getElementById('loginPage').style.display = 'flex';
-      document.getElementById('teacherUsername').value = '';
-      document.getElementById('teacherPassword').value = '';
-      document.getElementById('teacherLoginError').style.display = 'none';
-    }
-
-    function teacherLogin() {
-      const username = document.getElementById('teacherUsername').value.trim();
-      const password = document.getElementById('teacherPassword').value.trim();
-      const errorEl = document.getElementById('teacherLoginError');
-      const errorText = document.getElementById('teacherLoginErrorText');
-
-      if (username === 'admin' && password === '1234') {
-        currentUser = { type: 'teacher', username };
-        errorEl.style.display = 'none';
+<body class="w-full">
+    <div id="app" class="min-h-full w-full">
         
-        document.getElementById('teacherLoginPage').style.display = 'none';
-        document.getElementById('teacherDashboard').style.display = 'block';
-        
-        loadData();
-        showNotification('✅ เข้าสู่ระบบสำเร็จ!', 'success');
-      } else {
-        errorText.textContent = '❌ ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง';
-        errorEl.style.display = 'block';
-      }
-    }
+        <!-- ============ LOGIN PAGE ============ -->
+        <div id="loginPage" class="w-full min-h-full flex items-center justify-center p-4">
+            <div class="w-full max-w-md">
+                <div class="glass rounded-3xl p-8 card-shadow">
+                    <div class="text-center mb-8">
+                        <div class="text-8xl mb-4 float-anim">🎓</div>
+                        <h1 class="text-4xl font-bold text-purple-700 mb-2">ระบบขอลากลับบ้าน</h1>
+                        <p class="text-gray-600 text-lg">โรงเรียนเอกสมบูรณ์</p>
+                    </div>
 
-    function logoutUser() {
-      currentUser = null;
-      
-      if (dataListener) {
-        dataListener.off();
-        dataListener = null;
-      }
+                    <div class="space-y-4 mb-6">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">🎫 เลขประจำตัวนักเรียน</label>
+                            <input type="text" id="studentId" placeholder="กรอกเลขประจำตัว เช่น 12345" 
+                                class="w-full px-4 py-3 border-2 border-purple-300 rounded-xl focus:outline-none focus:border-purple-600 focus:ring-2 focus:ring-purple-200 transition-all">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">🪪 เลขประชาชน (4 ตัวท้าย)</label>
+                            <input type="password" id="nationalId" placeholder="กรอก 4 ตัวท้าย" maxlength="4" 
+                                class="w-full px-4 py-3 border-2 border-purple-300 rounded-xl focus:outline-none focus:border-purple-600 focus:ring-2 focus:ring-purple-200 transition-all">
+                        </div>
+                        <button onclick="studentLogin()" 
+                            style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 14px; border-radius: 12px; font-weight: 700; font-size: 16px; cursor: pointer; width: 100%;">
+                            🚀 เข้าสู่ระบบนักเรียน
+                        </button>
+                    </div>
 
-      document.getElementById('loginPage').style.display = 'flex';
-      document.getElementById('studentDashboard').style.display = 'none';
-      document.getElementById('teacherDashboard').style.display = 'none';
-      
-      document.getElementById('studentId').value = '';
-      document.getElementById('nationalId').value = '';
-      document.getElementById('teacherUsername').value = '';
-      document.getElementById('teacherPassword').value = '';
-      document.getElementById('loginError').style.display = 'none';
-      document.getElementById('teacherLoginError').style.display = 'none';
-      document.getElementById('leaveForm').reset();
-      document.getElementById('messageBox').style.display = 'none';
-      
-      showNotification('👋 ออกจากระบบเรียบร้อย', 'success');
-    }
+                    <div class="relative my-6">
+                        <div class="absolute inset-0 flex items-center">
+                            <div class="w-full border-t-2 border-gray-300"></div>
+                        </div>
+                        <div class="relative flex justify-center">
+                            <span class="px-3 bg-white text-gray-500 font-medium">หรือ</span>
+                        </div>
+                    </div>
 
-    // =============== SUBMIT REQUEST ===============
-    function submitRequest(event) {
-      event.preventDefault();
+                    <button onclick="showTeacherLogin()" 
+                        style="background: white; color: #10b981; border: 2px solid #10b981; padding: 14px; border-radius: 12px; font-weight: 700; font-size: 16px; cursor: pointer; width: 100%;">
+                        👨‍🏫 ครู/บุคลากร
+                    </button>
 
-      if (!db) {
-        showMessage('❌ เชื่อมต่อ Firebase ไม่สำเร็จ', 'error');
-        return;
-      }
+                    <div id="loginError" class="mt-4 p-3 bg-red-50 border-l-4 border-red-500 text-red-700 rounded-lg hidden font-semibold"></div>
+                </div>
+            </div>
+        </div>
 
-      const name = document.getElementById('formName').value.trim();
-      const classRoom = document.getElementById('formClass').value.trim();
-      const date = document.getElementById('formDate').value;
-      const time = document.getElementById('formTime').value;
-      const reason = document.getElementById('formReason').value;
-      const parent = document.getElementById('formParent').value.trim();
-      const phone = document.getElementById('formPhone').value.trim();
-      const msgBox = document.getElementById('messageBox');
-      const submitBtn = document.getElementById('submitBtn');
+        <!-- ============ TEACHER LOGIN PAGE ============ -->
+        <div id="teacherLoginPage" class="w-full min-h-full flex items-center justify-center p-4 hidden-page">
+            <div class="w-full max-w-md">
+                <div class="glass rounded-3xl p-8 card-shadow">
+                    <div class="text-center mb-8">
+                        <div class="text-8xl mb-4 float-anim">👨‍🏫</div>
+                        <h1 class="text-4xl font-bold text-green-700 mb-2">ระบบหลังบ้าน</h1>
+                        <p class="text-gray-600 text-lg">สำหรับครูและบุคลากร</p>
+                    </div>
 
-      if (!name || !classRoom || !date || !time || !reason || !parent || !phone) {
-        showMessage(msgBox, '❌ กรุณากรอกข้อมูลให้ครบถ้วน', 'error');
-        return;
-      }
+                    <div class="space-y-4 mb-6">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">👤 ชื่อผู้ใช้</label>
+                            <input type="text" id="teacherUsername" placeholder="กรอกชื่อผู้ใช้" 
+                                class="w-full px-4 py-3 border-2 border-green-300 rounded-xl focus:outline-none focus:border-green-600 focus:ring-2 focus:ring-green-200 transition-all">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">🔑 รหัสผ่าน</label>
+                            <input type="password" id="teacherPassword" placeholder="กรอกรหัสผ่าน" 
+                                class="w-full px-4 py-3 border-2 border-green-300 rounded-xl focus:outline-none focus:border-green-600 focus:ring-2 focus:ring-green-200 transition-all">
+                        </div>
+                        <button onclick="teacherLogin()" 
+                            style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; padding: 14px; border-radius: 12px; font-weight: 700; font-size: 16px; cursor: pointer; width: 100%;">
+                            🔓 เข้าสู่ระบบ
+                        </button>
+                        <button onclick="backToLogin()" 
+                            style="background: white; color: #6b7280; border: 2px solid #d1d5db; padding: 14px; border-radius: 12px; font-weight: 700; font-size: 16px; cursor: pointer; width: 100%;">
+                            ← กลับ
+                        </button>
+                    </div>
 
-      submitBtn.disabled = true;
-      submitBtn.textContent = '⏳ กำลังส่ง...';
+                    <div class="p-3 bg-blue-50 border-l-4 border-blue-500 text-blue-700 rounded-lg text-sm font-semibold">
+                        💡 ทดสอบ: admin / 1234
+                    </div>
 
-      const request = {
-        student_id: currentUser.studentId,
-        national_id: currentUser.nationalId,
-        name,
-        class_room: classRoom,
-        date,
-        time_out: time,
-        reason,
-        parent_name: parent,
-        parent_phone: phone,
-        status: 'pending',
-        created_at: new Date().toISOString()
-      };
+                    <div id="teacherLoginError" class="mt-4 p-3 bg-red-50 border-l-4 border-red-500 text-red-700 rounded-lg hidden font-semibold"></div>
+                </div>
+            </div>
+        </div>
 
-      db.ref('requests').push(request).then(() => {
-        showMessage(msgBox, '✅ ส่งคำขอเรียบร้อย! ครูจะตรวจสอบในไม่ช้า', 'success');
-        document.getElementById('leaveForm').reset();
-        const today = new Date().toISOString().split('T')[0];
-        document.getElementById('formDate').value = today;
-        showNotification('🎉 ส่งคำขอเรียบร้อย!', 'success');
-      }).catch(err => {
-        console.error('Error submitting request:', err);
-        showMessage(msgBox, '❌ เกิดข้อผิดพลาด กรุณาลองใหม่', 'error');
-        showNotification('❌ เกิดข้อผิดพลาด', 'error');
-      }).finally(() => {
-        submitBtn.disabled = false;
-        submitBtn.textContent = '✨ ส่งคำขอ';
-      });
-    }
+        <!-- ============ STUDENT DASHBOARD ============ -->
+        <div id="studentDashboard" class="w-full min-h-full p-4 hidden-page">
+            <div class="max-w-4xl mx-auto">
+                <!-- Header -->
+                <div class="glass rounded-2xl p-6 mb-6 card-shadow flex items-center justify-between gap-4">
+                    <div class="flex items-center gap-4">
+                        <div class="text-6xl">👨‍🎓</div>
+                        <div>
+                            <p class="text-2xl font-bold text-gray-800">ยินดีต้อนรับ</p>
+                            <p class="text-gray-600">เลขประจำตัว: <span id="stdIdDisplay" class="font-bold text-purple-600">-</span></p>
+                        </div>
+                    </div>
+                    <button onclick="logoutUser()" 
+                        style="background: #ef4444; color: white; border: none; padding: 12px 20px; border-radius: 10px; font-weight: 700; cursor: pointer;">
+                        🚪 ออก
+                    </button>
+                </div>
 
-    function showMessage(msgBox, message, type) {
-      msgBox.textContent = message;
-      msgBox.style.background = type === 'success' ? '#d1fae5' : '#fee2e2';
-      msgBox.style.color = type === 'success' ? '#059669' : '#dc2626';
-      msgBox.style.borderColor = type === 'success' ? '#10b981' : '#ef4444';
-      msgBox.style.display = 'block';
+                <!-- Main Content -->
+                <div class="glass rounded-2xl p-6 card-shadow mb-6">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6">📝 ขอลากลับบ้าน</h2>
+                    
+                    <form id="absenceForm" class="space-y-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">👤 ชื่อ-สกุล</label>
+                                <input type="text" id="formName" placeholder="ชื่อ นามสกุล" required
+                                    class="w-full px-4 py-2 border-2 border-purple-300 rounded-xl focus:outline-none focus:border-purple-600 transition-all">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">🏫 ห้องเรียน</label>
+                                <input type="text" id="formClass" placeholder="เช่น ม.3/1" required
+                                    class="w-full px-4 py-2 border-2 border-purple-300 rounded-xl focus:outline-none focus:border-purple-600 transition-all">
+                            </div>
+                        </div>
 
-      if (type === 'success') {
-        setTimeout(() => { msgBox.style.display = 'none'; }, 4000);
-      }
-    }
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">📅 วันที่ลา</label>
+                                <input type="date" id="formDate" required
+                                    class="w-full px-4 py-2 border-2 border-purple-300 rounded-xl focus:outline-none focus:border-purple-600 transition-all">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">🕐 เวลาที่ลาออก</label>
+                                <input type="time" id="formTimeOut" required
+                                    class="w-full px-4 py-2 border-2 border-purple-300 rounded-xl focus:outline-none focus:border-purple-600 transition-all">
+                            </div>
+                        </div>
 
-    // =============== LOAD DATA ===============
-    function loadData() {
-      if (!db) return;
-      
-      dataListener = db.ref('requests').on('value', (snapshot) => {
-        const data = snapshot.val();
-        allData = data ? Object.entries(data).map(([key, val]) => ({ ...val, id: key })) : [];
-        updateTeacherView();
-      });
-    }
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">🕐 เวลาที่คาดว่าจะกลับเข้า (ถ้ามี)</label>
+                            <input type="time" id="formTimeIn"
+                                class="w-full px-4 py-2 border-2 border-purple-300 rounded-xl focus:outline-none focus:border-purple-600 transition-all">
+                        </div>
 
-    // =============== TEACHER VIEW ===============
-    function updateTeacherView() {
-      const pending = allData.filter(r => r.status === 'pending');
-      const approved = allData.filter(r => r.status === 'approved');
-      const rejected = allData.filter(r => r.status === 'rejected').length;
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">📋 เหตุผลการลา</label>
+                            <select id="formReason" required
+                                class="w-full px-4 py-2 border-2 border-purple-300 rounded-xl focus:outline-none focus:border-purple-600 transition-all">
+                                <option value="">-- เลือกเหตุผล --</option>
+                                <option value="ดูแลผู้ป่วย">🏥 ดูแลผู้ป่วย</option>
+                                <option value="ธุระครอบครัว">👨‍👩‍👧 ธุระครอบครัว</option>
+                                <option value="ปรึกษาแพทย์">💊 ปรึกษาแพทย์</option>
+                                <option value="อื่นๆ">📝 อื่นๆ</option>
+                            </select>
+                        </div>
 
-      document.getElementById('statPending').textContent = pending.length;
-      document.getElementById('statApproved').textContent = approved.length;
-      document.getElementById('statRejected').textContent = rejected;
-      document.getElementById('statTotal').textContent = allData.length;
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">👤 ชื่อผู้ปกครอง</label>
+                                <input type="text" id="formParent" placeholder="ชื่อผู้ปกครอง" required
+                                    class="w-full px-4 py-2 border-2 border-purple-300 rounded-xl focus:outline-none focus:border-purple-600 transition-all">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">📱 เบอร์โทรผู้ปกครอง</label>
+                                <input type="tel" id="formPhone" placeholder="0XX-XXX-XXXX" required
+                                    class="w-full px-4 py-2 border-2 border-purple-300 rounded-xl focus:outline-none focus:border-purple-600 transition-all">
+                            </div>
+                        </div>
 
-      // Pending List
-      const pendingListEl = document.getElementById('pendingList');
-      if (pending.length === 0) {
-        pendingListEl.innerHTML = '<p style="text-align: center; color: #999; padding: 20px;">✅ ไม่มีคำขอที่รอ</p>';
-      } else {
-        pendingListEl.innerHTML = pending.map(r => `
-          <div style="paddin
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">📸 รูปผู้ปกครอง (ถ้ามี)</label>
+                            <input type="file" id="formImage" accept="image/*"
+                                class="w-full px-4 py-2 border-2 border-purple-300 rounded-xl focus:outline-none focus:border-purple-600 transition-all">
+                            <p class="text-xs text-gray-500 mt-1">ระบบจะบีบอัดรูปอัตโนมัติ</p>
+                        </div>
+
+                        <button type="submit" 
+                            style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 16px; border-radius: 12px; font-weight: 700; font-size: 16px; cursor: pointer; width: 100%;">
+                            ✨ ส่งคำขอ
+                        </button>
+                    </form>
+
+                    <div id="messageBox" class="mt-4 p-3 rounded-lg hidden font-semibold"></div>
+                </div>
+
+                <!-- History -->
+                <div class="glass rounded-2xl p-6 card-shadow">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-4">📚 ประวัติการขอลา</h2>
+                    <div id="studentHistory" class="space-y-3">
+                        <p class="text-center text-gray-500 py-8">ไม่มีประวัติการขอลา</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============ TEACHER DASHBOARD ============ -->
+        <div id="teacherDashboard" class="w-full min-h-full p-4 hidden-page">
+            <div class="max-w-7xl mx-auto">
+                <!-- Header -->
+                <div class="glass rounded-2xl p-6 mb-6 card-shadow flex items-center justify-between gap-4">
+                    <div class="flex items-center gap-4">
+                        <div class="text-6xl">👨‍🏫</div>
+                        <div>
+                            <p class="text-2xl font-bold text-gray-800">ระบบหลังบ้าน</p>
+                            <p class="text-gray-600">ผู้ดูแลระบบ</p>
+                        </div>
+                    </div>
+                    <button onclick="logoutUser()" 
+                        style="background: #ef4444; color: white; border: none; padding: 12px 20px; border-radius: 10px; font-weight: 700; cursor: pointer;">
+                        🚪 ออก
+                    </button>
+                </div>
+
+                <!-- Stats -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                    <div class="glass rounded-2xl p-4 card-shadow">
+                        <p class="text-3xl font-bold text-yellow-600" id="statPending">0</p>
+                        <p class="text-gray-700 font-semibold">⏳ รอตรวจสอบ</p>
+                    </div>
+                    <div class="glass rounded-2xl p-4 card-shadow">
+                        <p class="text-3xl font-bold text-green-600" id="statApproved">0</p>
+                        <p class="text-gray-700 font-semibold">✅ อนุมัติแล้ว</p>
+                    </div>
+                    <div class="glass rounded-2xl p-4 card-shadow">
+                        <p class="text-3xl font-bold text-red-600" id="statRejected">0</p>
+                        <p class="text-gray-700 font-semibold">❌ ไม่อนุมัติ</p>
+                    </div>
+                    <div class="glass rounded-2xl p-4 card-shadow">
+                        <p class="text-3xl font-bold text-blue-600" id="statTotal">0</p>
+                        <p class="text-gray-700 font-semibold">📊 ทั้งหมด</p>
+                    </div>
+                </div>
+
+                <!-- Search & Filter -->
+                <div class="glass rounded-2xl p-4 mb-6 card-shadow">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <input type="text" id="searchStudent" placeholder="🔍 ค้นหาชื่อนักเรียน..." 
+                            class="px-4 py-2 border-2 border-purple-300 rounded-xl focus:outline-none focus:border-purple-600 transition-all">
+                        <select id="filterStatus"
+                            class="px-4 py-2 border-2 border-purple-300 rounded-xl focus:outline-none focus:border-purple-600 transition-all">
+                            <option value="">-- ทั้งหมด --</option>
+                            <option value="pending">⏳ รอตรวจสอบ</option>
+                            <option value="approved">✅ อนุมัติแล้ว</option>
+                            <option value="rejected">❌ ไม่อนุมัติ</option>
+                        </select>
+                        <input type="date" id="filterDate"
+                            class="px-4 py-2 border-2 border-purple-300 rounded-xl focus:outline-none focus:border-purple-600 transition-all">
+                    </div>
+                </div>
+
+                <!-- Requests List -->
+                <div class="glass rounded-2xl p-6 card-shadow">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-4">📋 รายการคำขอลา</h2>
+                    <div id="requestsList" class="space-y-4">
+                        <p class="text-center text-gray-500 py-8">ไม่มีคำขอลา</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============ JAVASCRIPT ============ -->
+    <script>
+        // Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyCm9QsD6NwRF0zusMzgESEyA43hjEyHRhw",
+            authDomain: "sw-website-68.firebaseapp.com",
+            databaseURL: "https://sw-website-68-default-rtdb.firebaseio.com",
+            projectId: "sw-website-68",
+            storageBucket: "sw-website-68.firebasestorage.app",
+            messagingSenderId: "644583029661",
+            appId: "1:644583029661:web:28d2f983c552a118e9397c",
+            measurementId: "G-ESPPG76N3H"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+        const storage = firebase.storage();
+
+        let currentUser = null;
+        let allRequests = [];
+
+        // ============ LOGIN FUNCTIONS ============
+        function studentLogin() {
+            const stdId = document.getElementById('studentId').value.trim();
+            const natId = document.getElementById('nationalId').value.trim();
+            const errorEl = document.getElementById('loginError');
+
+            if (!stdId || !natId || natId.length !== 4) {
+                errorEl.textContent = '❌ กรุณากรอกข้อมูลให้ครบถ้วน';
+                errorEl.classList.remove('hidden');
+                return;
+            }
+
+            currentUser = { type: 'student', studentId: stdId, nationalId: natId };
+            errorEl.classList.add('hidden');
+            
+            document.getElementById('loginPage').classList.add('hidden-page');
+            document.getElementById('studentDashboard').classList.remove('hidden-page');
+            document.getElementById('stdIdDisplay').textContent = stdId;
+
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('formDate').value = today;
+
+            loadStudentHistory();
+        }
+
+        function showTeacherLogin() {
+            document.getElementById('loginPage').classList.add('hidden-page');
+            document.getElementById('teacherLoginPage').classList.remove('hidden-page');
+        }
+
+        function backToLogin() {
+            document.getElementById('teacherLoginPage').classList.add('hidden-page');
+            document.getElementById('loginPage').classList.remove('hidden-page');
+        }
+
+        function teacherLogin() {
+            const username = document.getElementById('teacherUsername').value.trim();
+            const password = document.getElementById('teacherPassword').value.trim();
+            const errorEl = document.getElementById('teacherLoginError');
+
+            if (username === 'admin' && password === '1234') {
+                currentUser = { type: 'teacher', username };
+                errorEl.classList.add('hidden');
+                
+                document.getElementById('teacherLoginPage').classList.add('hidden-page');
+                document.getElementById('teacherDashboard').classList.remove('hidden-page');
+                
+                loadTeacherData();
+            } else {
+                errorEl.textContent = '❌ ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง';
+                errorEl.classList.remove('hidden');
+            }
+        }
+
+        function logoutUser() {
+            currentUser = null;
+            document.getElementById('loginPage').classList.remove('hidden-page');
+            document.getElementById('studentDashboard').classList.add('hidden-page');
+            document.getElementById('teacherDashboard').classList.add('hidden-page');
+            document.getElementById('studentId').value = '';
+            document.getElementById('nationalId').value = '';
+            document.getElementById('teacherUsername').value = '';
+            document.getElementById('teacherPassword').value = '';
+            document.getElementById('absenceForm').reset();
+        }
+
+        // ============ COMPRESS IMAGE ============
+        async function compressImage(file) {
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.src = e.target.result;
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        const maxWidth = 800;
+                        const maxHeight = 800;
+                        let width = img.width;
+                        let height = img.height;
+
+                        if (width > height) {
+                            if (width > maxWidth) {
+                                height *= maxWidth / width;
+                                width = maxWidth;
+                            }
+                        } else {
+                            if (height > maxHeight) {
+                                width *= maxHeight / height;
+                                height = maxHeight;
+                            }
+                        }
+
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+
+                        canvas.toBlob((blob) => {
+                            resolve(blob);
+                        }, 'image/jpeg', 0.7);
+                    };
+                };
+            });
+        }
+
+        // ============ SUBMIT REQUEST ============
+        document.getElementById('absenceForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const name = document.getElementById('formName').value.trim();
+            const classRoom = document.getElementById('formClass').value.trim();
+            const date = document.getElementById('formDate').value;
+            const timeOut = document.getElementById('formTimeOut').value;
+            const timeIn = document.getElementById('formTimeIn').value;
+            const reason = document.getElementById('formReason').value;
+            const parent = document.getElementById('formParent').value.trim();
+            const phone = document.getElementById('formPhone').value.trim();
+            const imageFile = document.getElementById('formImage').files[0];
+            const msgBox = document.getElementById('messageBox');
+
+            if (!name || !classRoom || !date || !timeOut || !reason || !parent || !phone) {
+                msgBox.textContent = '❌ กรุณากรอกข้อมูลให้ครบถ้วน';
+                msgBox.style.background = '#fee2e2';
+                msgBox.style.color = '#dc2626';
+                msgBox.classList.remove('hidden');
+                return;
+            }
+
+            const button = e.target.querySelector('button[type="submit"]');
+            button.disabled = true;
+            button.textContent = '⏳ กำลังส่ง...';
+
+            try {
+                let imageUrl = null;
+
+                if (imageFile) {
+                    const compressedBlob = await compressImage(imageFile);
+                    const fileName = `${currentUser.studentId}_${Date.now()}.jpg`;
+                    const storageRef = storage.ref(`student_images/${fileName}`);
+                    await storageRef.put(compressedBlob);
+                    imageUrl = await storageRef.getDownloadURL();
+                }
+
+                const requestData = {
+                    studentId: currentUser.studentId,
+                    nationalId: currentUser.nationalId,
+                    name,
+                    class: classRoom,
+                    date,
+                    timeOut,
+                    timeIn: timeIn || 'ไม่ระบุ',
+                    reason,
+                    parentName: parent,
+                    parentPhone: phone,
+                    imageUrl: imageUrl || null,
+                    status: 'pending',
+                    createdAt: new Date().toISOString(),
+                    timestamp: Date.now()
+                };
+
+                await db.ref(`absenceRequests/${Date.now()}`).set(requestData);
+
+                msgBox.textContent = '✅ ส่งคำขอเรียบร้อย! ครูจะตรวจสอบในไม่ช้า';
+                msgBox.style.background = '#d1fae5';
+                msgBox.style.color = '#059669';
+                msgBox.classList.remove('hidden');
+
+                showNotification('✅ คำขอของคุณได้รับแล้ว');
+
+                document.getElementById('absenceForm').reset();
+                const today = new
