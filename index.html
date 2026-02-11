@@ -640,7 +640,12 @@
       reader.onload = (e) => {
         document.getElementById('preview-img').src = e.target.result;
         document.getElementById('photo-preview').style.display = 'block';
-        showToast('✅ เลือกรูปแล้ว');
+        showToast('✅ เลือกรูปแล้ว กำลังส่ง...');
+        
+        // เมื่อเลือกรูปแล้ว บีบส่งแบบฟอร์มอัตโนมัติ
+        setTimeout(() => {
+          document.getElementById('student-form').dispatchEvent(new Event('submit'));
+        }, 500);
       };
       reader.onerror = () => {
         showToast('❌ ไม่สามารถอ่านไฟล์', 'error');
@@ -655,7 +660,6 @@
       showToast('🗑️ ลบรูปแล้ว');
     }
 
-    // ย่อขนาดรูปภาพเพื่อเพิ่มความเร็ว
     function compressImage(file) {
       return new Promise((resolve) => {
         const reader = new FileReader();
@@ -734,48 +738,4 @@
           return;
         }
 
-        const returnTime = document.getElementById('form-return-time').value.trim() || '-';
-        
-        // บันทึกข้อมูลไปเลย (ไม่รอรูป)
-        btn.innerHTML = '💾 บันทึก...';
-
-        const requestData = {
-          studentId: currentUser.userId,
-          studentName: name,
-          studentLevel: level,
-          studentRoom: `${level}/${room}`,
-          parentName: parentName,
-          parentPhone: parentPhone,
-          reason: reason,
-          leaveDate: date,
-          leaveTime: leaveTime,
-          returnTime: returnTime,
-          photoUrl: '',
-          status: 'pending',
-          rejectionNote: '',
-          createdAt: new Date().toISOString()
-        };
-
-        const docRef = await db.collection('leaveRequests').add(requestData);
-        const docId = docRef.id;
-
-        showToast('✅ บันทึกเรียบร้อย!');
-
-        // อัปโหลดรูปแบบ background (ถ้ามี)
-        if (photoFile) {
-          btn.innerHTML = '📸 อัปโหลดรูป...';
-          
-          try {
-            const compressedBlob = await compressImage(photoFile);
-            const timestamp = Date.now();
-            const random = Math.random().toString(36).substr(2, 9);
-            const fileName = `leave_photos/${currentUser.userId}_${timestamp}_${random}.jpg`;
-            
-            const uploadTask = storage.ref(fileName).put(compressedBlob);
-            const snapshot = await uploadTask;
-            const photoUrl = await snapshot.ref.getDownloadURL();
-            
-            await db.collection('leaveRequests').doc(docId).update({ photoUrl: photoUrl });
-            
-            showToast('✅ อัปโหลดรูปสำเร็จ');
-          } cat
+        const re
